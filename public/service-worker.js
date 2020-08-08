@@ -2,6 +2,7 @@ const FILES_TO_CACHE = [
   "/",
   "/index.html",
   "/index.js", 
+  "/db.js", 
   "/styles.css", 
   "/icons/icon-192x192.png",
   "/icons/icon-512x512.png"
@@ -41,14 +42,7 @@ self.addEventListener("activate", function(evt) {
   self.clients.claim();
 });
 
-// Fetch 
-self.addEventListener('fetch', e => {
-  e.respondWith(
-    fetch(e.request).catch(() => caches.match(e.request))
-  )
-});
-
-// Fetch from api
+// fetch
 self.addEventListener("fetch", function(evt) {
   if (evt.request.url.includes("/api/")) {
     evt.respondWith(
@@ -70,4 +64,13 @@ self.addEventListener("fetch", function(evt) {
     );
 
     return;
-}});
+  }
+
+  evt.respondWith(
+    caches.open(CACHE_NAME).then(cache => {
+      return cache.match(evt.request).then(response => {
+        return response || fetch(evt.request);
+      });
+    })
+  );
+});
